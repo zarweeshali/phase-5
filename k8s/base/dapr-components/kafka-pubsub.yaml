@@ -1,0 +1,42 @@
+# Dapr Kafka Pub/Sub Component
+# [Task]: T017
+# [From]: specs/001-phase5-cloud/tasks.md §Phase 2
+#
+# Per Constitution Principle I, all Kafka interactions MUST go through Dapr.
+# This component abstracts Kafka behind Dapr Pub/Sub API.
+
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: todo-app
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: "REPLACE_WITH_KAFKA_BROKERS"  # e.g., cluster.cloud.redpanda.com:9092
+  - name: consumerGroup
+    value: "todo-service"
+  - name: authType
+    value: "saslPlain"  # SASL authentication for Redpanda Cloud
+  - name: saslUsername
+    secretKeyRef:
+      name: kafka-credentials
+      key: username
+  - name: saslPassword
+    secretKeyRef:
+      name: kafka-credentials
+      key: password
+  - name: maxMessageBytes
+    value: 1048576  # 1MB max message size
+  - name: consumerFetchMin
+    value: 1
+  - name: consumerFetchDefault
+    value: 1048576
+  - name: channelBufferSize
+    value: 16
+
+---
+# Note: For local Minikube development without authentication,
+# use the patched version in k8s/overlays/minikube/kafka-pubsub-patch.yaml

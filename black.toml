@@ -1,0 +1,24 @@
+# Black configuration for Phase V
+# https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
+
+[tool.black]
+# Line length
+line-length = 120
+
+# Python version
+target-version = ['py311']
+
+# Include patterns
+include = '\.pyi?$'
+
+# Exclude patterns
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.mypy_cache
+  | __pycache__
+  | build
+  | dist
+)/
+'''

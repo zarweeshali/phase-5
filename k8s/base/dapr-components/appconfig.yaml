@@ -1,0 +1,78 @@
+# Dapr Application Configuration
+# [Task]: T018
+# [From]: specs/001-phase5-cloud/tasks.md §Phase 2
+#
+# Configures Dapr sidecar behavior including tracing, metrics, and logging.
+# Per Constitution Principle VI, observability must be enabled by default.
+
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: appconfig
+  namespace: todo-app
+spec:
+  # Enable mTLS for secure service-to-service communication
+  mtls:
+    enabled: true
+    workloadCertTTL: 24h
+    allowedClockSkew: 1h
+  
+  # Enable distributed tracing with OpenTelemetry
+  tracing:
+    samplingRate: "1"  # Sample 100% of traces (reduce in production)
+    zipkin:
+      endpointAddress: "http://zipkin.observability.svc.cluster.local:9411/api/v2/spans"
+  
+  # Enable metrics collection
+  metrics:
+    enabled: true
+    rules:
+    - name: http
+      path: /v1.0/invoke
+      methods: [GET, POST, PUT, DELETE]
+    - name: grpc
+      path: /dapr.proto.runtime.v1.Dapr
+      methods: [InvokeService, PublishEvent, SaveState, GetState]
+  
+  # Enable secrets encryption at rest
+  secrets:
+    scopes:
+    - storeName: kubernetes-secrets
+      defaultAccess: allow
+      allowedSecrets: ["database-credentials", "kafka-credentials", "openai-api-key"]
+  
+  # Configure API access
+  apiAccess:
+    enabled: true
+  
+  # Enable access logging
+  accessLogging:
+    enabled: true
+    format: json
+  
+  # Health check configuration
+  healthCheck:
+    enabled: true
+    interval: 5s
+    threshold: 3
+  
+  # Retry policy for transient failures
+  retryPolicy:
+    maxRetries: 3
+    initialInterval: 1s
+    maxInterval: 10s
+    multiplier: 2.0
+  
+  # Enable actor support (if needed in future)
+  actor:
+    actorIdleTimeout: 1h
+    actorScanInterval: 30s
+    drainOngoingCallTimeout: 30s
+    drainRebalancedActors: true
+
+---
+# Note: For production, consider:
+# - Reducing samplingRate to 0.1 (10%) to reduce overhead
+# - Configuring persistent storage for actors if used
+# - Adding custom metrics rules for business metrics
+# - Configuring external secret stores (Azure Key Vault, AWS Secrets Manager)
